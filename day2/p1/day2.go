@@ -7,13 +7,14 @@ import (
 	"os"
 	"regexp"
 	"strconv"
-	"strings"
 )
 
 func main() {
+	re := regexp.MustCompile("^Game [0-9]+: ((((1[0-4] blue|[1-9] blue)|(1[0-2] red|[1-9] red)|(1[0-3] green|[1-9] green))*)[,\\s;]*)+$")
+	re2 := regexp.MustCompilePOSIX("[0-9]+")
 	sum := 0
-	re := regexp.MustCompile("[0-9]+")
-	file, err := os.Open("inputs.txt")
+
+	file, err := os.Open("bigboy.txt")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -22,29 +23,9 @@ func main() {
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		line := []byte(scanner.Text())
-		gameNo, _ := strconv.Atoi(string(re.Find(line)))
-		games := strings.Split(strings.Split(string(line), ":")[1], ";")
-		blue := true
-		green := true
-		red := true
-		for _, drawings := range games {
-			cubes := strings.Split(drawings, ",")
-			for _, combination := range cubes {
-				pair := strings.Split(strings.Trim(combination, " "), " ")
-				amount, _ := strconv.Atoi(pair[0])
-				if pair[1] == "blue" && amount > 14 {
-					blue = false
-				}
-				if pair[1] == "green" && amount > 13 {
-					green = false
-				}
-				if pair[1] == "red" && amount > 12 {
-					red = false
-				}
-			}
-		}
-		fmt.Println("Game No: ", gameNo, "rgb", red, green, blue, "sum ", sum)
-		if red && green && blue {
+		match := re.Match(line)
+		if match {
+			gameNo, _ := strconv.Atoi(string(re2.Find(line)))
 			sum = sum + gameNo
 		}
 	}
@@ -52,5 +33,6 @@ func main() {
 	if err := scanner.Err(); err != nil {
 		log.Fatal(err)
 	}
+
 	fmt.Println(sum)
 }
