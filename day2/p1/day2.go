@@ -14,7 +14,7 @@ func main() {
 	re2 := regexp.MustCompilePOSIX("[0-9]+")
 	sum := 0
 
-	file, err := os.Open("bigboy.txt")
+	file, err := os.Open("inputs.txt")
 	if err != nil {
 		log.Fatal(err)
 	}
