@@ -9,56 +9,62 @@ import (
 	"strconv"
 )
 
-type touching struct {
-	up    []int
-	down  []int
-	left  []int
-	right []int
+type gear struct {
+	x int
+	y int
 }
 
 func main() {
 	sum := 0
+	fuckle := make(map[gear][]int)
 	// i love this little guy
 	re := regexp.MustCompile("([0-9])")
-	gear := regexp.MustCompile("(\\*)")
+	gearex := regexp.MustCompile("\\*")
 	lines := initEmpty(returnLines("inputs.txt"))
 	for _, line := range lines {
 		fmt.Println(line)
 	}
+	numRange := [2]int{-1, -1}
 	for i, line := range lines {
 		for j, char := range line {
-			var touching touching
 			// why use anything smart when you can just match everything to my pet regex
-			if gear.Match([]byte(string(char))) {
+			if re.Match([]byte(string(char))) && !re.Match([]byte(string(line[j-1]))) {
+				numRange[0] = j
+			}
+			if re.Match([]byte(string(char))) && !re.Match([]byte(string(line[j+1]))) {
+				numRange[1] = j
+			}
+			if numRange[0] != -1 && numRange[1] != -1 {
 				// we check eveything that isn't totally on edge left or right, top or bottom
-				for k := 0; k <= 2; k++ {
+				for k := numRange[0] - 1; k <= numRange[1]+1; k++ {
 					// check above and below in line
-					if re.Match([]byte(string(lines[i+1][k]))) {
-						touching.up = append(touching.up, k)
-						fmt.Println("up", string(lines[i+1][k]))
+					if gearex.Match([]byte(string(lines[i+1][k]))) {
+						fuckle[gear{x: i + 1, y: k}] = append(fuckle[gear{x: i + 1, y: k}], makeNumber(line, numRange[:]))
 					}
-					if re.Match([]byte(string(lines[i-1][k]))) {
-						touching.down = append(touching.down, k)
-						fmt.Println("down", string(lines[i-1][k]))
+					if gearex.Match([]byte(string(lines[i-1][k]))) {
+						fmt.Println("up", string(lines[i-1][k]), "number", makeNumber(line, numRange[:]), "x", i-1, "y", k)
+						fuckle[gear{x: i - 1, y: k}] = append(fuckle[gear{x: i - 1, y: k}], makeNumber(line, numRange[:]))
 					}
 				}
 				// check the right side and the left
-				if re.Match([]byte(string(line[j-1]))) {
-					touching.left = append(touching.left, j)
-					fmt.Println("left", string(line[j-1]))
+				if gearex.Match([]byte(string(line[numRange[0]-1]))) {
+					fuckle[gear{x: i, y: numRange[0] - 1}] = append(fuckle[gear{x: i, y: numRange[0] - 1}], makeNumber(line, numRange[:]))
 				}
-				if re.Match([]byte(string(line[j+1]))) {
-					fmt.Println("right", string(line[j-1]))
+				if gearex.Match([]byte(string(line[numRange[1]+1]))) {
+					fuckle[gear{x: i, y: numRange[1] + 1}] = append(fuckle[gear{x: i, y: numRange[1] + 1}], makeNumber(line, numRange[:]))
+				}
 
-					touching.right = append(touching.right, j)
-				}
-				if len(touching.down) > 0 || len(touching.up) > 0 || len(touching.left) > 0 || len(touching.right) > 0 {
-					fmt.Println(touching)
-					touching = touching
-				}
+				numRange = [2]int{-1, -1}
 			}
 		}
 	}
+
+	for _, value := range fuckle {
+		if len(value) == 2 {
+			sum = sum + value[0]*value[1]
+		}
+	}
+	fmt.Println(fuckle)
 	fmt.Print(sum)
 }
 
